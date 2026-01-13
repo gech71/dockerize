@@ -65,7 +65,7 @@ export default function Home() {
             onClick={handleRouteHandler}
             className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-white font-medium transition hover:bg-indigo-700 active:scale-[0.98]"
           >
-            Call Route Handler
+            Call Route Handler Updated
           </button>
 
           {routeMessage && (

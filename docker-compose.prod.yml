@@ -1,11 +1,9 @@
-version: "3.9"
-
 services:
   nextjs:
     container_name: nextjs_prod
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     ports:
       - "3000:3000"
     environment:
