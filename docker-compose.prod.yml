@@ -8,3 +8,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+
+# docker tag IMAGE_NAME ghcr.io/GITHUB_PROFILE_NAME/IMAGE_NAME
+# docker push ghcr.io/gech71/IMAGE_NAME
