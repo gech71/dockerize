@@ -44,4 +44,4 @@ jobs:
           username: ${{ secrets.WINDOWS_SERVER_USER }}
           key: ${{ secrets.WINDOWS_SERVER_SSH_KEY }}
           script: |
-            powershell -File C:\deploy\deploy.ps1
+            powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\deploy\deploy.ps1"
