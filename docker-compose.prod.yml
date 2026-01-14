@@ -11,4 +11,3 @@ services:
       - NODE_ENV=production
 # docker tag IMAGE_NAME ghcr.io/GITHUB_PROFILE_NAME/IMAGE_NAME
 # docker push ghcr.io/gech71/IMAGE_NAME
-
