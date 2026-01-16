@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # ==========================
 # CONFIG
 # ==========================
-$IMAGE = "nextjs-web:latest"
+$IMAGE = "ghcr.io/gech71/next-docker-app:latest"
 
 $OLD_CONTAINER = "nextjs-prod"
 $NEW_CONTAINER = "nextjs-prod-new"
