@@ -13,33 +13,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # OPTIONAL: Only keep this if your Dockerfile does NOT build the app
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 24
-
-      # OPTIONAL: Remove if build happens inside Dockerfile
-      - name: Install dependencies
-        run: npm ci
-
-      # OPTIONAL: Remove if build happens inside Dockerfile
-      - name: Build Next.js app
-        run: npm run build
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image with cache
+      - name: Build Docker image (cached)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.prod
           push: false
-          tags: ghcr.io/gech71/next-docker-app:latest
+          tags: nextjs-web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Deploy locally (NO SSH)
-      - name: Deploy application
+      - name: Deploy with zero downtime (NGINX)
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\deploy\deploy.ps1"
