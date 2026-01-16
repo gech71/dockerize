@@ -1,4 +1,3 @@
-# c:\deploy\deploy.ps1
 Write-Host "Starting ZERO-DOWNTIME deployment with NGINX..." -ForegroundColor Cyan
 $ErrorActionPreference = "Stop"
 
