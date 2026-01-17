@@ -14,22 +14,47 @@ $NEW_PORT = 3002
 $APP_PORT = 3000
 
 $NGINX_CONF = "C:\nginx\conf\nginx.conf"
+$NGINX_EXE  = "C:\nginx\nginx.exe"
 
+# ==========================
+# PRE-CLEAN (idempotent)
+# ==========================
+Write-Host "Cleaning previous failed deployment (if any)..."
+docker rm -f $NEW_CONTAINER *> $null
 # ==========================
 # START NEW CONTAINER
 # ==========================
 Write-Host "Starting new container on port $NEW_PORT..."
 
-docker run -d `
+$containerId = docker run -d `
   --name $NEW_CONTAINER `
   -p "${NEW_PORT}:${APP_PORT}" `
   $IMAGE
 
-Start-Sleep -Seconds 5
+if (-not $containerId) {
+    Write-Error "Docker failed to start the new container"
+    exit 1
+}
+
+# ==========================
+# WAIT FOR APP TO BOOT
+# ==========================
+Start-Sleep -Seconds 10
+
+# ==========================
+# VERIFY CONTAINER IS RUNNING
+# ==========================
+$running = docker ps --filter "name=$NEW_CONTAINER" --format "{{.Names}}"
+if ($running -ne $NEW_CONTAINER) {
+    Write-Error "New container is not running"
+    exit 1
+}
 
 # ==========================
 # HEALTH CHECK
 # ==========================
+Write-Host "Running health check..."
+
 try {
     $r = Invoke-WebRequest "http://localhost:$NEW_PORT" -UseBasicParsing -TimeoutSec 5
     if ($r.StatusCode -ne 200) {
@@ -37,8 +62,8 @@ try {
     }
 }
 catch {
-    Write-Error "New version failed health check. Rolling back."
-    docker rm -f $NEW_CONTAINER
+    Write-Error "Health check failed. Rolling back."
+    docker rm -f $NEW_CONTAINER 2>$null
     exit 1
 }
 
@@ -53,15 +78,20 @@ Write-Host "Switching NGINX upstream..."
   -replace "server 127.0.0.1:$OLD_PORT;", "server 127.0.0.1:$NEW_PORT;" |
   Set-Content $NGINX_CONF
 
-# Reload NGINX (NO downtime)
-& C:\nginx\nginx.exe -s reload
+# Graceful reload (NO downtime)
+& $NGINX_EXE -c $NGINX_CONF -s reload
 
 Write-Host "Traffic switched instantly." -ForegroundColor Green
 
 # ==========================
 # CLEANUP OLD CONTAINER
 # ==========================
-docker rm -f $OLD_CONTAINER -ErrorAction SilentlyContinue
+
+Write-Host "Cleaning up old container..."
+$oldExists = docker ps -a --filter "name=$OLD_CONTAINER" --format "{{.Names}}"
+if ($oldExists -eq $OLD_CONTAINER) {
+    docker rm -f $OLD_CONTAINER | Out-Null
+}
 docker rename $NEW_CONTAINER $OLD_CONTAINER
 
 Write-Host "Deployment completed with ZERO DOWNTIME!" -ForegroundColor Green

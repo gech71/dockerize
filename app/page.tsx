@@ -22,7 +22,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-950 dark:to-black px-4">
-      <h1>Getaye</h1>
       <main className="w-full max-w-xl rounded-2xl bg-white dark:bg-zinc-900 shadow-xl p-10 space-y-8">
         {/* Logo */}
         <div className="flex justify-center">
