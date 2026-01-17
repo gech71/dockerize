@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # ==========================
 # CONFIG
 # ==========================
-$IMAGE = "ghcr.io/gech71/next-docker-app:buildcache"
+$IMAGE = "ghcr.io/gech71/next-docker-app:latest"
 
 $OLD_CONTAINER = "nextjs-prod"
 $NEW_CONTAINER = "nextjs-prod-new"
@@ -31,7 +31,7 @@ Start-Sleep -Seconds 5
 # HEALTH CHECK
 # ==========================
 try {
-    $r = Invoke-WebRequest "http://localhost:$NEW_PORT" -TimeoutSec 5
+    $r = Invoke-WebRequest "http://localhost:$NEW_PORT" -UseBasicParsing -TimeoutSec 5
     if ($r.StatusCode -ne 200) {
         throw "Health check failed"
     }
