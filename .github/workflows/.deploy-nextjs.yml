@@ -33,5 +33,10 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/next-docker-app:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/next-docker-app:buildcache,mode=max
 
-      - name: Deploy with zero downtime (NGINX)
-        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\deploy\deploy.ps1"
+      - name: Deploy on Windows server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.WINDOWS_SERVER_HOST }}
+          username: ${{ secrets.WINDOWS_SERVER_USER }}
+          password: ${{ secrets.WINDOWS_SERVER_SSH_KEY }}
+          script: powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\deploy\deploy.ps1"
