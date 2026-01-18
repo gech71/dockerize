@@ -1,26 +1,61 @@
 Write-Host "Starting ZERO-DOWNTIME deployment with NGINX..." -ForegroundColor Cyan
 $ErrorActionPreference = "Stop"
 
+
 # ==========================
 # CONFIG
 # ==========================
 $IMAGE = "ghcr.io/gech71/next-docker-app:latest"
 
-$OLD_CONTAINER = "nextjs-prod"
-$NEW_CONTAINER = "nextjs-prod-new"
-
-$OLD_PORT = 3001
-$NEW_PORT = 3002
+$CONTAINER_A = "nextjs-prod"
+$CONTAINER_B = "nextjs-prod-new"
+$PORT_A = 3001
+$PORT_B = 3002
 $APP_PORT = 3000
 
 $NGINX_CONF = "C:\nginx\conf\nginx.conf"
 $NGINX_EXE  = "C:\nginx\nginx.exe"
 
 # ==========================
+# DETERMINE ACTIVE/INACTIVE PORTS & CONTAINERS
+# ==========================
+# Read nginx.conf to find which port is currently active
+$nginxConfContent = Get-Content $NGINX_CONF -Raw
+# Updated regex to match port even if there are extra parameters after the port number
+if ($nginxConfContent -match "server 127.0.0.1:(\d+)") {
+    $activePort = $matches[1]
+    Write-Host "[DEBUG] Detected active port: $activePort" -ForegroundColor Yellow
+} else {
+    Write-Error "Could not determine active port from nginx.conf"
+    exit 1
+}
+
+if ($activePort -eq $PORT_A) {
+    $OLD_PORT = $PORT_A
+    $NEW_PORT = $PORT_B
+    $OLD_CONTAINER = $CONTAINER_A
+    $NEW_CONTAINER = $CONTAINER_B
+} else {
+    $OLD_PORT = $PORT_B
+    $NEW_PORT = $PORT_A
+    $OLD_CONTAINER = $CONTAINER_B
+    $NEW_CONTAINER = $CONTAINER_A
+}
+
+# ==========================
 # PRE-CLEAN (idempotent)
 # ==========================
 Write-Host "Cleaning previous failed deployment (if any)..."
-docker rm -f $NEW_CONTAINER *> $null
+$newExists = docker ps -a --filter "name=$NEW_CONTAINER" --format "{{.Names}}"
+if ($newExists -eq $NEW_CONTAINER) {
+    docker rm -f $NEW_CONTAINER | Out-Null
+}
+# Also check for any container using $NEW_PORT and remove it to avoid port conflicts
+$portInUseContainer = docker ps -a --filter "publish=$NEW_PORT" --format "{{.Names}}"
+if ($portInUseContainer -and $portInUseContainer -ne $NEW_CONTAINER) {
+    Write-Host "[DEBUG] Removing container $portInUseContainer using port $NEW_PORT..." -ForegroundColor Yellow
+    docker rm -f $portInUseContainer | Out-Null
+}
 # ==========================
 # START NEW CONTAINER
 # ==========================
