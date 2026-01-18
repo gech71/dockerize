@@ -35,6 +35,8 @@ export default function Home() {
           />
         </div>
 
+        <h2>Getaye</h2>
+
         {/* Title */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
