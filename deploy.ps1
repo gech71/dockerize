@@ -195,19 +195,36 @@ Reload-Nginx
 # ==========================
 Write-Host "`nCleaning old container..." -ForegroundColor Cyan
 
-$oldContainer = docker ps -a --filter "name=$OLD_CONTAINER_NAME" --format "{{.Names}}"
+$oldContainer = docker ps -a `
+    --filter "name=$CONTAINER_NAME-$ACTIVE_PORT" `
+    --format "{{.Names}}"
 
 if ($oldContainer) {
-    Write-Host "Stopping old container: $OLD_CONTAINER_NAME"
-    docker stop $OLD_CONTAINER_NAME | Out-Null
+    Write-Host "Stopping old container: $oldContainer"
+    docker stop $oldContainer | Out-Null
     Start-Sleep 5
-    Write-Host "Removing old container: $OLD_CONTAINER_NAME"
-    docker rm $OLD_CONTAINER_NAME | Out-Null
+    Write-Host "Removing old container: $oldContainer"
+    docker rm $oldContainer | Out-Null
 } else {
-    Write-Host "Old container $OLD_CONTAINER_NAME not found, skipping cleanup" -ForegroundColor Yellow
+    Write-Host "Old container not found, skipping cleanup" -ForegroundColor Yellow
 }
 
-docker rename $NEW_CONTAINER_NAME "$CONTAINER_NAME-$ACTIVE_PORT" 2>$null | Out-Null
+# ==========================
+# RENAME NEW CONTAINER (SAFE)
+# ==========================
+$targetName = "$CONTAINER_NAME-$NEW_PORT"
+
+# Check if container with target name already exists
+$existing = docker ps -a --filter "name=$targetName" --format "{{.Names}}"
+
+if ($existing -and $existing -ne $NEW_CONTAINER_NAME) {
+    Write-Host "Target container name $targetName already exists. Skipping rename." -ForegroundColor Yellow
+} elseif ($NEW_CONTAINER_NAME -ne $targetName) {
+    Write-Host "Renaming $NEW_CONTAINER_NAME → $targetName" -ForegroundColor Cyan
+    docker rename $NEW_CONTAINER_NAME $targetName
+} else {
+    Write-Host "Container already has the correct name. Skipping rename." -ForegroundColor Green
+}
 
 docker image prune -f 2>$null | Out-Null
 
