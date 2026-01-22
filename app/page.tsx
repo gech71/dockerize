@@ -35,7 +35,7 @@ export default function Home() {
           />
         </div>
 
-        <h2>Getaye</h2>
+        <h2>Alhamdu</h2>
 
         {/* Title */}
         <div className="text-center space-y-2">
